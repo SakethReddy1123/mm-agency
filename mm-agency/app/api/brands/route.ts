@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
-import * as brand from "@/lib/models/brand";
+import { getBrandList, createBrand } from "@/lib/services";
 import { uploadFile, UploadError } from "@/lib/upload";
 
 export async function GET() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const list = await brand.find();
+  const list = await getBrandList();
   return NextResponse.json(list);
 }
 
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const row = await brand.createBrand({
+    const row = await createBrand({
       name,
       slug,
       description,

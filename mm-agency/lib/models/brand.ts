@@ -45,6 +45,20 @@ export async function findBySlug(slug: string): Promise<BrandRow | null> {
   return res.rows[0] ?? null;
 }
 
+/** Find brands by name (partial, case-insensitive). Use for search/filter when user types brand name. */
+export async function findByName(name: string): Promise<BrandRow[]> {
+  if (!name?.trim()) return [];
+  const pool = getPool();
+  const res = await pool.query<BrandRow>(
+    `SELECT id, name, slug, description, logo_url, created_at, updated_at
+     FROM "brand"
+     WHERE name ILIKE $1
+     ORDER BY name`,
+    [`%${name.trim()}%`]
+  );
+  return res.rows;
+}
+
 export async function createBrand(data: {
   name: string;
   slug?: string | null;
