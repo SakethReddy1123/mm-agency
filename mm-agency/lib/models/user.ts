@@ -36,12 +36,12 @@ export async function verifyPassword(
   const [saltHex, hashHex] = stored.split(".");
   if (!saltHex || !hashHex) return false;
   const salt = Buffer.from(saltHex, "hex");
-  const derived = await scryptAsync(
-    plainPassword,
-    salt,
-    KEY_LEN,
-    SCRYPT_OPTS
-  );
+  const derived = await (scryptAsync as (
+    password: string | Buffer,
+    salt: string | Buffer,
+    keylen: number,
+    options: { N: number; r: number; p: number }
+  ) => Promise<Buffer>)(plainPassword, salt, KEY_LEN, SCRYPT_OPTS);
   const hash = (derived as Buffer).toString("hex");
   return hash === hashHex;
 }
@@ -61,6 +61,26 @@ export async function createUser(
   return res.rows[0];
 }
 
+/** List all users (ordered by email). */
+export async function find(): Promise<UserRow[]> {
+  const pool = getPool();
+  const res = await pool.query<UserRow>(
+    `SELECT id, email, password, name, created_at, updated_at FROM "user" ORDER BY email`
+  );
+  return res.rows;
+}
+
+/** Find one user by id. */
+export async function findById(id: string): Promise<UserRow | null> {
+  const pool = getPool();
+  const res = await pool.query<UserRow>(
+    `SELECT id, email, password, name, created_at, updated_at FROM "user" WHERE id = $1`,
+    [id]
+  );
+  return res.rows[0] ?? null;
+}
+
+/** Find one user by email. */
 export async function findUserByEmail(email: string): Promise<UserRow | null> {
   const pool = getPool();
   const res = await pool.query<UserRow>(
@@ -68,4 +88,46 @@ export async function findUserByEmail(email: string): Promise<UserRow | null> {
     [email.trim().toLowerCase()]
   );
   return res.rows[0] ?? null;
+}
+
+export async function updateUser(
+  id: string,
+  data: {
+    email?: string;
+    password?: string;
+    name?: string | null;
+  }
+): Promise<UserRow | null> {
+  const pool = getPool();
+  const updates: string[] = [];
+  const values: unknown[] = [];
+  let i = 1;
+  if (data.email !== undefined) {
+    updates.push(`email = $${i++}`);
+    values.push(data.email.trim().toLowerCase());
+  }
+  if (data.password !== undefined && data.password.trim()) {
+    const hashed = await hashPassword(data.password);
+    updates.push(`password = $${i++}`);
+    values.push(hashed);
+  }
+  if (data.name !== undefined) {
+    updates.push(`name = $${i++}`);
+    values.push(data.name?.trim() || null);
+  }
+  if (updates.length === 0) return null;
+  updates.push(`updated_at = NOW()`);
+  values.push(id);
+  const res = await pool.query<UserRow>(
+    `UPDATE "user" SET ${updates.join(", ")} WHERE id = $${i} RETURNING id, email, password, name, created_at, updated_at`,
+    values
+  );
+  return res.rows[0] ?? null;
+}
+
+/** Delete a user by id. */
+export async function deleteUser(id: string): Promise<boolean> {
+  const pool = getPool();
+  const res = await pool.query(`DELETE FROM "user" WHERE id = $1`, [id]);
+  return (res.rowCount ?? 0) > 0;
 }

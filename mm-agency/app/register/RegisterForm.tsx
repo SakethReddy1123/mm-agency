@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import type { RegisterState } from "./actions";
 import Link from "next/link";
 
@@ -22,7 +23,7 @@ export function RegisterForm({
 }: {
   registerAction: (prev: RegisterState, formData: FormData) => Promise<RegisterState>;
 }) {
-  const [state, formAction] = useFormState(registerAction, {});
+  const [state, formAction] = useActionState(registerAction, {});
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
