@@ -2,6 +2,22 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { findUserByEmail, verifyPassword } from "@/lib/models/user";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+// Allow CORS preflight (OPTIONS) so POST from same-origin or allowed origins works
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: "POST, OPTIONS",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "86400",
+    },
+  });
+}
+
 export async function POST(request: Request) {
   let body: { email?: string; password?: string };
   try {
