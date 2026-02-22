@@ -40,6 +40,18 @@ CREATE TABLE IF NOT EXISTS "user" (
 CREATE INDEX IF NOT EXISTS idx_user_email ON "user" (email);
 `;
 
+const TABLE_BRAND = `
+CREATE TABLE IF NOT EXISTS "brand" (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name         TEXT NOT NULL,
+  slug         TEXT UNIQUE,
+  description  TEXT,
+  logo_url     TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_brand_slug ON "brand" (slug);
+`;
 const TABLE_CUSTOMER = `
 CREATE TABLE IF NOT EXISTS customer (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -53,6 +65,7 @@ CREATE TABLE IF NOT EXISTS customer (
 CREATE INDEX IF NOT EXISTS idx_customer_name ON customer (name);
 `;
 
+const TABLES = [TABLE_USER, TABLE_BRAND];
 const TABLES = [TABLE_USER, TABLE_CUSTOMER];
 
 // -----------------------------------------------------------------------------
