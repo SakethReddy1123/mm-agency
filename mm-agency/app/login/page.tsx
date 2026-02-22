@@ -1,4 +1,3 @@
-import { loginAction } from "./actions";
 import { LoginForm } from "./LoginForm";
 
 export default function LoginPage() {
@@ -35,7 +34,7 @@ export default function LoginPage() {
           <p className="mb-8 text-zinc-500">
             Enter your credentials to continue.
           </p>
-          <LoginForm loginAction={loginAction} />
+          <LoginForm />
         </div>
       </div>
     </div>

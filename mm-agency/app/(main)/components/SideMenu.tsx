@@ -9,8 +9,11 @@ import {
   HiOutlineChartBar,
   HiOutlineMenu,
   HiOutlineX,
+  HiOutlineUserCircle,
 } from "react-icons/hi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+type Me = { id: string; email: string; name: string | null } | null;
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: HiOutlineChartBar },
@@ -49,6 +52,16 @@ function NavLinks({ onLinkClick }: { onLinkClick?: () => void }) {
 
 export function SideMenu() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [me, setMe] = useState<Me>(null);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((data) => setMe(data.user ?? null))
+      .catch(() => setMe(null));
+  }, []);
+
+  const displayName = me?.name?.trim() || me?.email || null;
 
   return (
     <>
@@ -98,7 +111,20 @@ export function SideMenu() {
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
           <NavLinks onLinkClick={() => setMobileOpen(false)} />
         </nav>
-        <div className="border-t border-zinc-800 p-3">
+        <div className="border-t border-zinc-800 p-3 space-y-2">
+          {displayName && (
+            <div className="flex items-center gap-3 rounded-lg bg-zinc-800/50 px-3 py-2.5">
+              <HiOutlineUserCircle className="h-8 w-8 shrink-0 text-emerald-400" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-white">
+                  {me?.name?.trim() || "Signed in"}
+                </p>
+                <p className="truncate text-xs text-zinc-500" title={me?.email ?? undefined}>
+                  {me?.email}
+                </p>
+              </div>
+            </div>
+          )}
           <form action="/api/logout" method="POST">
             <button
               type="submit"
