@@ -69,3 +69,14 @@ export async function findUserByEmail(email: string): Promise<UserRow | null> {
   );
   return res.rows[0] ?? null;
 }
+
+export type SafeUser = { id: string; email: string; name: string | null };
+
+export async function findUserById(id: string): Promise<SafeUser | null> {
+  const pool = getPool();
+  const res = await pool.query<SafeUser>(
+    `SELECT id, email, name FROM "user" WHERE id = $1`,
+    [id]
+  );
+  return res.rows[0] ?? null;
+}
