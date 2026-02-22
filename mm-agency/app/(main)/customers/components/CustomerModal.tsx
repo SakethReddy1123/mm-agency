@@ -136,6 +136,7 @@ export function CustomerModal({
             <label className="mb-1 block text-sm font-medium text-zinc-400">Image</label>
             {(imagePreview || (isEdit && customer?.image_url && !removeImage)) ? (
               <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element -- imagePreview can be data URL */}
                 <img
                   src={imagePreview ?? customer!.image_url!}
                   alt=""

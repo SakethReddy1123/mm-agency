@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();

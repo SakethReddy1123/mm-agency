@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import {
   HiOutlinePlus,
@@ -36,9 +37,12 @@ const ACCEPT_IMAGES = "image/jpeg,image/png,image/gif,image/webp,image/svg+xml";
 function ProductImage({ product }: { product: Product }) {
   if (product.image_url) {
     return (
-      <img
+      <Image
         src={product.image_url}
         alt=""
+        width={40}
+        height={40}
+        unoptimized
         className="h-10 w-10 rounded object-cover bg-zinc-800"
       />
     );
@@ -288,6 +292,7 @@ function ProductModal({
             {(imagePreview ||
               (isEdit && product?.image_url && !removeImage)) ? (
               <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element -- imagePreview can be data URL */}
                 <img
                   src={imagePreview ?? product!.image_url!}
                   alt=""
