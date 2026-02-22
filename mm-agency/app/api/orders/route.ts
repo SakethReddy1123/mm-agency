@@ -10,6 +10,116 @@ import {
   getOrderIdFromRows,
 } from "@/lib/models/order";
 
+type OrderListItem = {
+  order_id: string;
+  customer_id: string;
+  customer_name: string;
+  created_at: string;
+  total: number;
+};
+
+export type OrderLineRow = {
+  order_id: string;
+  order_date: string;
+  product_name: string;
+  quantity: number;
+  total_amount: number;
+};
+
+export type CustomerOrdersGroup = {
+  customer_id: string;
+  customer_name: string;
+  lines: OrderLineRow[];
+  total: number;
+};
+
+/**
+ * GET /api/orders — list orders.
+ * ?by=customer — returns data grouped by customer: customer name, product name, quantity, total amount per line.
+ * No query — returns flat list of orders (order_id, customer_name, date, total) for backward compatibility.
+ */
+export async function GET(request: Request) {
+  try {
+    await initDb();
+    const pool = getPool();
+    const { searchParams } = new URL(request.url);
+    const byCustomer = searchParams.get("by") === "customer";
+
+    if (byCustomer) {
+      const res = await pool.query<{
+        customer_id: string;
+        customer_name: string;
+        order_id: string;
+        created_at: Date;
+        product_name: string;
+        quantity: number;
+        total_amount: string;
+      }>(
+        `SELECT o.customer_id, c.name AS customer_name, o.order_id, o.created_at,
+                p.name AS product_name, o.quantity, o.total_amount::numeric AS total_amount
+         FROM "order" o
+         JOIN customer c ON c.id = o.customer_id
+         JOIN product p ON p.id = o.product_id
+         ORDER BY c.name, o.created_at DESC, o.order_id, p.name`
+      );
+      const byCust = new Map<string, CustomerOrdersGroup>();
+      for (const r of res.rows) {
+        const key = r.customer_id;
+        if (!byCust.has(key)) {
+          byCust.set(key, {
+            customer_id: r.customer_id,
+            customer_name: r.customer_name,
+            lines: [],
+            total: 0,
+          });
+        }
+        const group = byCust.get(key)!;
+        const totalAmount = parseFloat(r.total_amount);
+        group.lines.push({
+          order_id: r.order_id,
+          order_date: new Date(r.created_at).toISOString(),
+          product_name: r.product_name,
+          quantity: r.quantity,
+          total_amount: totalAmount,
+        });
+        group.total += totalAmount;
+      }
+      const list = Array.from(byCust.values());
+      return NextResponse.json(list);
+    }
+
+    const res = await pool.query<{
+      order_id: string;
+      customer_id: string;
+      customer_name: string;
+      created_at: Date;
+      total: string;
+    }>(
+      `SELECT o.order_id, o.customer_id, c.name AS customer_name,
+              MIN(o.created_at) AS created_at,
+              SUM(o.total_amount::numeric) AS total
+       FROM "order" o
+       JOIN customer c ON c.id = o.customer_id
+       GROUP BY o.order_id, o.customer_id, c.name
+       ORDER BY MIN(o.created_at) DESC`
+    );
+    const list: OrderListItem[] = res.rows.map((r) => ({
+      order_id: r.order_id,
+      customer_id: r.customer_id,
+      customer_name: r.customer_name,
+      created_at: new Date(r.created_at).toISOString(),
+      total: parseFloat(r.total),
+    }));
+    return NextResponse.json(list);
+  } catch (err) {
+    console.error("GET /api/orders:", err);
+    return NextResponse.json(
+      { error: "Failed to list orders" },
+      { status: 500 }
+    );
+  }
+}
+
 /**
  * POST /api/orders
  * Body: { customer_id: string, items: [{ product_id: string, quantity: number }] }
