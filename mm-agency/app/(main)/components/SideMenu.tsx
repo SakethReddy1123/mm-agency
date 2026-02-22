@@ -52,13 +52,12 @@ export function SideMenu() {
 
   return (
     <>
-      {/* Mobile header + hamburger */}
-      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-zinc-800 bg-zinc-950 px-4 py-3 lg:hidden">
-        <span className="text-lg font-semibold text-white">MM Agency</span>
+      {/* Mobile header: in-flow, sticky, so main layout is not overflowed */}
+      <header className="sticky top-0 z-30 shrink-0 flex items-center gap-3 border-b border-zinc-800 bg-zinc-950 px-4 py-3 lg:hidden">
         <button
           type="button"
           onClick={() => setMobileOpen((o) => !o)}
-          className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+          className="shrink-0 rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"
           aria-label="Toggle menu"
         >
           {mobileOpen ? (
@@ -67,7 +66,8 @@ export function SideMenu() {
             <HiOutlineMenu className="h-6 w-6" />
           )}
         </button>
-      </div>
+        <span className="text-lg font-semibold text-white">MM Agency</span>
+      </header>
 
       {/* Mobile overlay */}
       {mobileOpen && (

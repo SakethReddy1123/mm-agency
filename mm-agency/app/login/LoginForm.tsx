@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import type { LoginState } from "./actions";
 
 function SubmitButton() {
@@ -22,7 +23,7 @@ export function LoginForm({
 }: {
   loginAction: (prev: LoginState, formData: FormData) => Promise<LoginState>;
 }) {
-  const [state, formAction] = useFormState(loginAction, {});
+  const [state, formAction] = useActionState(loginAction, {});
 
   return (
     <form action={formAction} className="flex flex-col gap-5">

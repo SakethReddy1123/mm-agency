@@ -40,16 +40,20 @@ CREATE TABLE IF NOT EXISTS "user" (
 CREATE INDEX IF NOT EXISTS idx_user_email ON "user" (email);
 `;
 
-// Add more tables here, e.g.:
-// const TABLE_PROJECT = `
-// CREATE TABLE IF NOT EXISTS "project" (
-//   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//   name       TEXT NOT NULL,
-//   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-// );
-// `;
+const TABLE_BRAND = `
+CREATE TABLE IF NOT EXISTS "brand" (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name         TEXT NOT NULL,
+  slug         TEXT UNIQUE,
+  description  TEXT,
+  logo_url     TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_brand_slug ON "brand" (slug);
+`;
 
-const TABLES = [TABLE_USER /* , TABLE_PROJECT, ... */];
+const TABLES = [TABLE_USER, TABLE_BRAND];
 
 // -----------------------------------------------------------------------------
 // Initialize DB (creates all tables; call once when app spins up)
