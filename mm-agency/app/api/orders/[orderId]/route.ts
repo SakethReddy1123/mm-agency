@@ -9,9 +9,10 @@ import { getCustomerById } from "@/lib/models/customer";
 
 export type OrderInvoiceResponse = {
   order_id: string;
+  order_number: string | null;
   customer: { name: string; phone?: string; address?: string };
   created_at: string;
-  items: { productName: string; quantity: number; price: number; total: number }[];
+  items: { productName: string; productImageUrl: string | null; quantity: number; price: number; total: number }[];
   total: number;
 };
 
@@ -41,23 +42,27 @@ export async function GET(
     const items: OrderInvoiceResponse["items"] = [];
     let total = 0;
     for (const row of rows) {
-      const prodRes = await pool.query<{ name: string }>(
-        `SELECT name FROM product WHERE id = $1`,
+      const prodRes = await pool.query<{ name: string; image_url: string | null }>(
+        `SELECT name, image_url FROM product WHERE id = $1`,
         [row.product_id]
       );
       const productName = prodRes.rows[0]?.name ?? "Unknown";
+      const productImageUrl = prodRes.rows[0]?.image_url ?? null;
       const unitPrice = parseFloat(row.unit_price);
       const rowTotal = parseFloat(row.total_amount);
       total += rowTotal;
       items.push({
         productName,
+        productImageUrl,
         quantity: row.quantity,
         price: unitPrice,
         total: rowTotal,
       });
     }
+    const orderNumber = rows[0].order_number ?? null;
     const res: OrderInvoiceResponse = {
       order_id: id,
+      order_number: orderNumber,
       customer: {
         name: customer.name,
         phone: customer.phone ?? undefined,

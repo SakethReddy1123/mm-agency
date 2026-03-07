@@ -3,6 +3,7 @@ import { getPool } from "../db";
 export type OrderRow = {
   id: string;
   order_id: string;
+  order_number: string | null;
   customer_id: string;
   product_id: string;
   quantity: number;
@@ -23,7 +24,15 @@ export type CreateOrderInput = {
   items: CreateOrderItem[];
 };
 
-/** Create an order: inserts one row per item with same order_id. unit_price and total_amount must be pre-calculated by caller. Optional client for transaction. */
+/** Get next human-readable order number (e.g. ORD-000001). */
+async function getNextOrderNumber(q: import("pg").Pool | import("pg").PoolClient): Promise<string> {
+  const res = await q.query<{ order_number: string }>(
+    `SELECT 'ORD-' || LPAD(nextval('order_number_seq')::text, 6, '0') AS order_number`
+  );
+  return res.rows[0]?.order_number ?? `ORD-${Date.now()}`;
+}
+
+/** Create an order: inserts one row per item with same order_id and order_number. unit_price and total_amount must be pre-calculated by caller. Optional client for transaction. */
 export async function createOrder(
   input: CreateOrderInput,
   client?: import("pg").PoolClient
@@ -38,14 +47,16 @@ export async function createOrder(
   }
 
   const order_id = crypto.randomUUID();
+  const order_number = await getNextOrderNumber(q);
   const rows: OrderRow[] = [];
   for (const item of items) {
     const res = await q.query<OrderRow>(
-      `INSERT INTO "order" (order_id, customer_id, product_id, quantity, unit_price, total_amount)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, order_id, customer_id, product_id, quantity, unit_price, total_amount, created_at`,
+      `INSERT INTO "order" (order_id, order_number, customer_id, product_id, quantity, unit_price, total_amount)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, order_id, order_number, customer_id, product_id, quantity, unit_price, total_amount, created_at`,
       [
         order_id,
+        order_number,
         customer_id,
         item.product_id.trim(),
         item.quantity,
@@ -70,7 +81,7 @@ export async function getOrderRowsByOrderId(
 ): Promise<OrderRow[]> {
   const q = client ?? getPool();
   const res = await q.query<OrderRow>(
-    `SELECT id, order_id, customer_id, product_id, quantity, unit_price, total_amount, created_at
+    `SELECT id, order_id, order_number, customer_id, product_id, quantity, unit_price, total_amount, created_at
      FROM "order" WHERE order_id = $1`,
     [orderId]
   );

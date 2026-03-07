@@ -12,6 +12,7 @@ import {
 
 type OrderListItem = {
   order_id: string;
+  order_number: string | null;
   customer_id: string;
   customer_name: string;
   created_at: string;
@@ -90,12 +91,13 @@ export async function GET(request: Request) {
 
     const res = await pool.query<{
       order_id: string;
+      order_number: string | null;
       customer_id: string;
       customer_name: string;
       created_at: Date;
       total: string;
     }>(
-      `SELECT o.order_id, o.customer_id, c.name AS customer_name,
+      `SELECT o.order_id, MAX(o.order_number) AS order_number, o.customer_id, c.name AS customer_name,
               MIN(o.created_at) AS created_at,
               SUM(o.total_amount::numeric) AS total
        FROM "order" o
@@ -105,6 +107,7 @@ export async function GET(request: Request) {
     );
     const list: OrderListItem[] = res.rows.map((r) => ({
       order_id: r.order_id,
+      order_number: r.order_number ?? null,
       customer_id: r.customer_id,
       customer_name: r.customer_name,
       created_at: new Date(r.created_at).toISOString(),

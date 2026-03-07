@@ -83,11 +83,12 @@ CREATE INDEX IF NOT EXISTS idx_product_name ON product (name);
 CLUSTER product USING idx_product_brand_id;
 `;
 
-/** Single order table: customer + product per row. order_id groups lines into one order. */
+/** Single order table: customer + product per row. order_id groups lines into one order. order_number is human-readable (e.g. ORD-000001). */
 const TABLE_ORDER = `
 CREATE TABLE IF NOT EXISTS "order" (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id     UUID NOT NULL,
+  order_number VARCHAR(32),
   customer_id  UUID NOT NULL REFERENCES customer (id) ON DELETE CASCADE,
   product_id   UUID NOT NULL REFERENCES product (id) ON DELETE RESTRICT,
   quantity     INTEGER NOT NULL CHECK (quantity > 0),
@@ -99,6 +100,10 @@ CREATE INDEX IF NOT EXISTS idx_order_order_id ON "order" (order_id);
 CREATE INDEX IF NOT EXISTS idx_order_customer_id ON "order" (customer_id);
 CREATE INDEX IF NOT EXISTS idx_order_product_id ON "order" (product_id);
 CREATE INDEX IF NOT EXISTS idx_order_created_at ON "order" (created_at);
+`;
+const ORDER_MIGRATION = `
+CREATE SEQUENCE IF NOT EXISTS order_number_seq;
+ALTER TABLE "order" ADD COLUMN IF NOT EXISTS order_number VARCHAR(32);
 `;
 
 const TABLES = [TABLE_USER, TABLE_BRAND, TABLE_CUSTOMER, TABLE_PRODUCT, TABLE_ORDER];
@@ -112,4 +117,5 @@ export async function initDb(): Promise<void> {
   for (const sql of TABLES) {
     await client.query(sql);
   }
+  await client.query(ORDER_MIGRATION);
 }
