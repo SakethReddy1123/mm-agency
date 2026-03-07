@@ -118,47 +118,86 @@ export default function OrdersPage() {
           No orders yet.
         </div>
       ) : (
-        <div className="mt-8 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50">
-          <table className="w-full min-w-[500px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-800/50">
-                <th className="px-4 py-3 font-medium text-zinc-300">Customer</th>
-                <th className="px-4 py-3 font-medium text-zinc-300">Order number</th>
-                <th className="px-4 py-3 font-medium text-zinc-300">Order date</th>
-                <th className="px-4 py-3 font-medium text-zinc-300 text-right">Total amount</th>
-                <th className="w-12 px-2 py-3" aria-label="Print" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800">
-              {orders.map((order) => (
-                <tr
-                  key={order.order_id}
-                  className="text-zinc-400 transition-colors hover:bg-zinc-800/50"
-                >
-                  <td className="px-4 py-3 font-medium text-white">{order.customer_name}</td>
-                  <td className="px-4 py-3 tabular-nums text-zinc-300">
-                    {order.order_number ?? order.order_id.slice(0, 8)}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-300">{formatDate(order.created_at)}</td>
-                  <td className="px-4 py-3 text-right tabular-nums text-white">
-                    ₹{order.total.toFixed(2)}
-                  </td>
-                  <td className="px-2 py-3">
-                    <button
-                      type="button"
-                      onClick={() => openPrint(order)}
-                      className="rounded p-1.5 text-zinc-400 hover:bg-zinc-600 hover:text-white"
-                      title="Print order"
-                      aria-label="Print order"
-                    >
-                      <HiOutlinePrinter className="h-5 w-5" />
-                    </button>
-                  </td>
+        <>
+          {/* Mobile: card layout so all columns are visible without horizontal scroll */}
+          <div className="mt-8 space-y-3 md:hidden">
+            {orders.map((order) => (
+              <div
+                key={order.order_id}
+                className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <p className="truncate font-medium text-white">{order.customer_name}</p>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                      <span className="text-zinc-500">Order</span>
+                      <span className="tabular-nums text-zinc-300">
+                        {order.order_number ?? order.order_id.slice(0, 8)}
+                      </span>
+                      <span className="text-zinc-500">Date</span>
+                      <span className="text-zinc-300">{formatDate(order.created_at)}</span>
+                    </div>
+                    <p className="text-base font-semibold text-emerald-400 tabular-nums">
+                      ₹{order.total.toFixed(2)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openPrint(order)}
+                    className="shrink-0 rounded-lg p-2.5 text-zinc-400 hover:bg-zinc-700 hover:text-white"
+                    title="Print order"
+                    aria-label="Print order"
+                  >
+                    <HiOutlinePrinter className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table with horizontal scroll on narrow viewports */}
+          <div className="mt-8 overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/50 hidden md:block">
+            <table className="w-full min-w-[500px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 bg-zinc-800/50">
+                  <th className="px-4 py-3 font-medium text-zinc-300">Customer</th>
+                  <th className="px-4 py-3 font-medium text-zinc-300">Order number</th>
+                  <th className="px-4 py-3 font-medium text-zinc-300">Order date</th>
+                  <th className="px-4 py-3 font-medium text-zinc-300 text-right">Total amount</th>
+                  <th className="w-12 px-2 py-3" aria-label="Print" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-zinc-800">
+                {orders.map((order) => (
+                  <tr
+                    key={order.order_id}
+                    className="text-zinc-400 transition-colors hover:bg-zinc-800/50"
+                  >
+                    <td className="px-4 py-3 font-medium text-white">{order.customer_name}</td>
+                    <td className="px-4 py-3 tabular-nums text-zinc-300">
+                      {order.order_number ?? order.order_id.slice(0, 8)}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-300">{formatDate(order.created_at)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-white">
+                      ₹{order.total.toFixed(2)}
+                    </td>
+                    <td className="px-2 py-3">
+                      <button
+                        type="button"
+                        onClick={() => openPrint(order)}
+                        className="rounded p-1.5 text-zinc-400 hover:bg-zinc-600 hover:text-white"
+                        title="Print order"
+                        aria-label="Print order"
+                      >
+                        <HiOutlinePrinter className="h-5 w-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {printOrder && (
