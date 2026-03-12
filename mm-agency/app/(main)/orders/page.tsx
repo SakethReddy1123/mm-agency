@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useReactToPrint } from "react-to-print";
-import { HiOutlinePrinter, HiOutlineX } from "react-icons/hi";
-import { OrderPrintContent, type OrderPrintData } from "./OrderPrintContent";
+import { useEffect, useState } from "react";
+import { HiOutlinePrinter } from "react-icons/hi";
+import type { OrderPrintData } from "./OrderPrintContent";
+import { openOrderPrintWindow } from "./orderPrintWindow";
 
 type OrderListItem = {
   order_id: string;
@@ -41,19 +41,6 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [printOrder, setPrintOrder] = useState<OrderPrintData | null>(null);
-  const printRef = useRef<HTMLDivElement>(null);
-
-  const handlePrint = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: printOrder
-      ? `Order-${printOrder.order_number ?? "invoice"}-${printOrder.customer.name}`
-      : "Order",
-    pageStyle: `
-      @page { margin: 14mm; }
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    `,
-  });
 
   useEffect(() => {
     async function load() {
@@ -78,7 +65,7 @@ export default function OrdersPage() {
       const res = await fetch(`/api/orders/${order.order_id}`);
       if (!res.ok) throw new Error("Failed to load order");
       const data: OrderInvoiceResponse = await res.json();
-      setPrintOrder({
+      const printable: OrderPrintData = {
         order_number: data.order_number,
         customer: data.customer,
         order_date: data.created_at,
@@ -90,7 +77,9 @@ export default function OrdersPage() {
           total: i.total,
         })),
         total: data.total,
-      });
+      };
+
+      openOrderPrintWindow(printable);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load order");
     }
@@ -196,52 +185,6 @@ export default function OrdersPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </>
-      )}
-
-      {printOrder && (
-        <>
-          {/* On-screen preview modal (not used directly for printing to avoid scroll/height constraints issues on mobile) */}
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 print:hidden"
-            onClick={(e) => e.target === e.currentTarget && setPrintOrder(null)}
-          >
-            <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-xl">
-              <div className="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-3">
-                <h2 className="text-lg font-semibold text-white">
-                  Order {printOrder.order_number ?? "Invoice"} — {printOrder.customer.name}
-                </h2>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handlePrint()}
-                    className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
-                  >
-                    <HiOutlinePrinter className="h-5 w-5" />
-                    Print / Download
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPrintOrder(null)}
-                    className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"
-                    aria-label="Close"
-                  >
-                    <HiOutlineX className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-              <div className="min-h-0 flex-1 overflow-y-auto p-4">
-                <OrderPrintContent data={printOrder} />
-              </div>
-            </div>
-          </div>
-
-          {/* Dedicated, unconstrained print container to ensure multi-page orders print correctly on mobile */}
-          <div className="hidden print:block">
-            <div ref={printRef}>
-              <OrderPrintContent data={printOrder} />
-            </div>
           </div>
         </>
       )}
