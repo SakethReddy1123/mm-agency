@@ -23,6 +23,10 @@ export function OrderProductsModal({
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [imagePreview, setImagePreview] = useState<{
+    url: string;
+    name: string;
+  } | null>(null);
   /** After save, show invoice (InvoiceBill UI); user can Print or Done. */
   const [savedInvoiceLines, setSavedInvoiceLines] = useState<InvoiceLine[] | null>(null);
   const [shouldPrintAfterSave, setShouldPrintAfterSave] = useState(false);
@@ -254,11 +258,33 @@ export function OrderProductsModal({
                         {prods.map((p) => {
                           const qty = quantities[p.id] ?? 0;
                           const available = p.stock_count - qty;
+                          const initial = (p.name?.trim().slice(0, 1) || "?").toUpperCase();
                           return (
                             <div
                               key={p.id}
                               className="flex flex-wrap items-center gap-3 rounded-lg border border-zinc-700 bg-zinc-800/30 p-3"
                             >
+                              <div className="h-10 w-10 shrink-0">
+                                {p.image_url ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setImagePreview({ url: p.image_url!, name: p.name })}
+                                    className="block h-10 w-10 overflow-hidden rounded bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    title="View image"
+                                    aria-label={`View image for ${p.name}`}
+                                  >
+                                    <img
+                                      src={p.image_url}
+                                      alt={p.name}
+                                      className="h-10 w-10 object-cover"
+                                    />
+                                  </button>
+                                ) : (
+                                  <div className="flex h-10 w-10 items-center justify-center rounded bg-emerald-600/30 text-emerald-400 text-sm font-medium">
+                                    {initial}
+                                  </div>
+                                )}
+                              </div>
                               <div className="flex-1 min-w-[140px]">
                                 <p className="font-medium text-white">{p.name}</p>
                                 <p className="text-xs text-zinc-500">
@@ -302,6 +328,35 @@ export function OrderProductsModal({
             </>
           )}
         </div>
+
+        {imagePreview && (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
+            onClick={(e) => e.target === e.currentTarget && setImagePreview(null)}
+          >
+            <div className="w-full max-w-3xl overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
+                <p className="text-sm font-medium text-white">{imagePreview.name}</p>
+                <button
+                  type="button"
+                  onClick={() => setImagePreview(null)}
+                  className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                  aria-label="Close image"
+                >
+                  <HiOutlineX className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="bg-black">
+                <img
+                  src={imagePreview.url}
+                  alt={imagePreview.name}
+                  className="max-h-[75vh] w-full object-contain"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {!savedInvoiceLines ? (
           <div className="border-t border-zinc-800 px-4 py-3 flex items-center justify-between gap-4 shrink-0">
             <p className="text-lg font-semibold text-white">

@@ -16,5 +16,6 @@ export type ProductForOrder = {
   name: string;
   price: string;
   stock_count: number;
+  image_url: string | null;
   brand_name: string;
 };
