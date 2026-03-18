@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { HiOutlineX, HiOutlinePrinter } from "react-icons/hi";
-import type { Customer, ProductForOrder } from "./types";
+import type { BrandForOrder, Customer, ProductForOrder } from "./types";
 import type { InvoiceLine } from "./invoicePrint";
 import { InvoiceBill, type InvoiceCustomer, type InvoiceLineItem } from "./InvoiceBill";
 
@@ -16,7 +16,7 @@ export function OrderProductsModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
+  const [brands, setBrands] = useState<BrandForOrder[]>([]);
   const [allProducts, setAllProducts] = useState<ProductForOrder[]>([]);
   const [selectedBrandIds, setSelectedBrandIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -227,6 +227,19 @@ export function OrderProductsModal({
                       key={b.id}
                       className="inline-flex items-center gap-2 rounded-lg border border-zinc-600 bg-zinc-800/50 px-3 py-2 cursor-pointer hover:bg-zinc-800"
                     >
+                      <div className="h-6 w-6 shrink-0">
+                        {b.logo_url ? (
+                          <img
+                            src={b.logo_url}
+                            alt={b.name}
+                            className="h-6 w-6 rounded object-cover bg-zinc-900"
+                          />
+                        ) : (
+                          <div className="flex h-6 w-6 items-center justify-center rounded bg-emerald-600/30 text-emerald-400 text-[11px] font-semibold">
+                            {(b.name?.trim().slice(0, 1) || "?").toUpperCase()}
+                          </div>
+                        )}
+                      </div>
                       <input
                         type="checkbox"
                         checked={selectedBrandIds.has(b.id)}

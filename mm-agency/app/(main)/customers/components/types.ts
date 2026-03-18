@@ -8,7 +8,7 @@ export type Customer = {
   updated_at: string;
 };
 
-export type BrandForOrder = { id: string; name: string };
+export type BrandForOrder = { id: string; name: string; logo_url: string | null };
 
 export type ProductForOrder = {
   id: string;
